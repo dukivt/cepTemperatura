@@ -1,0 +1,35 @@
+### um CEP válido é enviado
+
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "cep": "24230136"
+}
+
+### um CEP inválido
+
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "cep": "2491"
+}
+
+### Um CEP que não existe é enviado
+
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "cep": "00000000"
+}
+
+### o CEP não é fornecido
+
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "cep": ""
+}
