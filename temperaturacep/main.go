@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"net/http"
+	http "net/http"
 	"net/url"
 	"regexp"
 	"unicode"
@@ -48,11 +48,14 @@ func main() {
 		r.Get("/", ProcuraCepHandler)
 	})
 
-	http.ListenAndServe(":8081", r)
+	err := http.ListenAndServe(":8081", r)
+	if err != nil {
+		return
+	}
 }
 
 func ProcuraCepHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, span := otel.Tracer("temperaturaCep").Start(r.Context(), "encontra-cep")
+	ctx, span := otel.Tracer("temperaturacep").Start(r.Context(), "encontra-cep")
 	defer span.End()
 
 	if r.URL.Path != "/" {
@@ -93,18 +96,22 @@ func ProcuraCepHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("erro ao procurar temperatura: " + errorStr))
 		return
 	}
-	json.NewEncoder(w).Encode(weather)
+	_ = json.NewEncoder(w).Encode(weather)
 }
 
 func EncontraCep(cep string, ctx context.Context) (*ViaCep, error) {
-	_, span := otel.Tracer("temperaturaCep").Start(ctx, "chamando-cep-viacep")
+	_, span := otel.Tracer("temperaturacep").Start(ctx, "chamando-cep-viacep")
 	defer span.End()
 
 	req, err := http.Get("http://viacep.com.br/ws/" + cep + "/json/")
 	if err != nil {
 		return nil, err
 	}
-	defer req.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+		}
+	}(req.Body)
 
 	res, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -121,7 +128,7 @@ func EncontraCep(cep string, ctx context.Context) (*ViaCep, error) {
 }
 
 func EncontraTemperatura(city string, ctx context.Context) (*Response, error) {
-	_, span := otel.Tracer("temperaturaCep").Start(ctx, "pega-temperatura-em-weatherapi")
+	_, span := otel.Tracer("temperaturacep").Start(ctx, "pega-temperatura-em-weatherapi")
 	defer span.End()
 
 	urlWeatherApi := "http://api.weatherapi.com/v1/current.json?key=12969ce544064451ab2103040240905&aqi=no&q=" + transCidade(city)
@@ -130,7 +137,11 @@ func EncontraTemperatura(city string, ctx context.Context) (*Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer req.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+		}
+	}(req.Body)
 
 	res, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -154,7 +165,11 @@ func isMn(r rune) bool {
 }
 
 func transCidade(s string) string {
-	t := transform.Chain(norm.NFD, transform.RemoveFunc(isMn), norm.NFC)
+	t := transform.Chain(
+		norm.NFD,
+		transform.RemoveFunc(isMn),
+		norm.NFC,
+	)
 	result, _, _ := transform.String(t, s)
 	result = url.QueryEscape(result)
 	return result

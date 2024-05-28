@@ -14,11 +14,11 @@ import (
 func startZipkin() {
 	exporter, err := zipkin.New("http://zipkin:9411/api/v2/spans")
 	if err != nil {
-		log.Fatalf("Could not create zipkin exporter: %s", err.Error())
+		log.Fatalf("não foi possível criar o exportador zipkin: %s", err.Error())
 	}
 	tp := trace.NewTracerProvider(
 		trace.WithBatcher(exporter),
-		trace.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String("recebeCep"))),
+		trace.WithResource(resource.NewWithAttributes(semconv.SchemaURL, semconv.ServiceNameKey.String("temperaturacep"))),
 	)
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.TraceContext{})

@@ -1,10 +1,10 @@
 version: "3"
 
 services:
-  recebeCep:
-    container_name: recebeCep
+  recebecep:
+    container_name: recebe-cep
     build:
-      context: ./recebeCep
+      context: ./recebecep
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -13,13 +13,13 @@ services:
     networks:
       - local-network
 
-  temperaturaCep:
-    container_name: temperaturaCep
+  temperaturacep:
+    container_name: temp-cep
     build:
-      context: ./temperaturaCep
+      context: ./temperaturacep
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "8082:8082"
     depends_on:
       - zipkin
     networks:

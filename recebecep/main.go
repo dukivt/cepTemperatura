@@ -36,7 +36,10 @@ func main() {
 
 	r.Post("/", ProcuraCepHandler)
 
-	http.ListenAndServe(":8080", r)
+	err := http.ListenAndServe(":8080", r)
+	if err != nil {
+		return
+	}
 }
 
 func ProcuraCepHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +50,11 @@ func ProcuraCepHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+		}
+	}(r.Body)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -93,7 +100,10 @@ func ProcuraCepHandler(w http.ResponseWriter, r *http.Request) {
 
 	if temperature != nil {
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(temperature)
+		err := json.NewEncoder(w).Encode(temperature)
+		if err != nil {
+			return
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("não foi possível encontrar a temperatura"))
@@ -101,10 +111,10 @@ func ProcuraCepHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TemperaturaCep(cep string, ctx context.Context) (*Response, error) {
-	_, span := otel.Tracer("recebeCep").Start(ctx, "chamando-temperatura-cep")
+	_, span := otel.Tracer("recebecep").Start(ctx, "chamando-temperatura-cep")
 	defer span.End()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", "http://temperaturaCep:8081/?cep="+cep, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://temperaturacep:8082/?cep="+cep, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +133,11 @@ func TemperaturaCep(cep string, ctx context.Context) (*Response, error) {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+		}
+	}(resp.Body)
 
 	var data Response
 	err = json.Unmarshal(res, &data)
