@@ -48,7 +48,7 @@ func main() {
 		r.Get("/", ProcuraCepHandler)
 	})
 
-	err := http.ListenAndServe(":8081", r)
+	err := http.ListenAndServe(":8082", r)
 	if err != nil {
 		return
 	}
